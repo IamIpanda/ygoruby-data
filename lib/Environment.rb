@@ -6,21 +6,28 @@ module Ygoruby
   class Environment
     # SQL 卡片查询指令
     READ_DATA_SQL = 'select * from datas join texts on datas.id == texts.id where datas.id == (?)'
+    READ_ALL_DATA_SQL = 'select * from datas join texts on datas.id == texts.id'
     # SQL 系列查询指令
     QUERY_SET_SQL = 'select id from datas where (setcode & 0x0000000000000FFF == (?) or setcode & 0x000000000FFF0000 == (?) or setcode & 0x00000FFF00000000 == (?) or setcode & 0x0FFF000000000000 == (?))'
     QUERY_SUBSET_SQL = 'select id from datas where (setcode & 0x000000000000FFFF == (?) or setcode & 0x00000000FFFF0000 == (?) or setcode & 0x0000FFFF00000000 == (?) or setcode & 0xFFFF000000000000 == (?))'
     # SQL 卡片查询指令
     SEARCH_NAME_SQL = 'select id from texts where name like (?)'
-    # 预载变量
-    VARIABLES = YAML.load_file(File.dirname(__FILE__) + '/Variables.yaml')
 
     attr_accessor :attributes
     attr_accessor :races
     attr_accessor :types
     attr_accessor :sets
     attr_accessor :locale
+    attr_reader :cards
 
     def initialize(locale)
+
+      path = File.join Ygoruby.locale_path, "/#{locale}"
+      unless Dir.exist? path
+        Ygoruby.warn "Card Environment can't find #{locale} path."
+        return nil
+      end
+
       @cards = {}
       @locale = locale
       @dbs = search_cdb locale
@@ -34,7 +41,7 @@ module Ygoruby
       @types = []
       @sets = []
 
-      load_strings_file File.join File.dirname(__FILE__) + VARIABLES["locale_path"], "/#{locale}/strings.conf"
+      load_strings_file File.join Ygoruby.locale_path, "/#{locale}/strings.conf"
       link_strings_and_constants
       link_setname_to_sql
 
@@ -42,8 +49,8 @@ module Ygoruby
     end
 
     def search_cdb(locale)
-      db_path = Dir.glob File.join(File.dirname(__FILE__) + Environment::VARIABLES['locale_path'], "/#{locale}/*.cdb")
-      Ygoruby.info "Card environment #{locale} loading #{db_path.count} cdb(s) from #{Environment::VARIABLES['locale_path']}"
+      db_path = Dir.glob File.join(Ygoruby.locale_path, "/#{locale}/*.cdb")
+      Ygoruby.info "Card environment #{locale} loading #{db_path.count} cdb(s) from #{Ygoruby.locale_path}"
       db_path.map {|path| SQLite3::Database.new path}
     end
 
@@ -60,7 +67,7 @@ module Ygoruby
         @race_constants = []
         @type_constants = []
 
-        load_lua_file(File.dirname(__FILE__) + Environment::VARIABLES["lua_path"])
+        load_lua_file Ygoruby.lua_path
         register_methods
       end
 
@@ -78,7 +85,7 @@ module Ygoruby
           check_and_add_constant name, value, 'TYPE_', @type_constants
         end
         # 种族中第一行包含一个「ALL」
-        @race_constants = @race_constants[1..-1]
+        # @race_constants = @race_constants[1..-1]
       end
 
       def load_lua_line_pattern(line)
@@ -103,13 +110,22 @@ module Ygoruby
         items.each do |item|
           method_name = ('is_' + prefix + '_' + item[:name].downcase).to_sym
           Ygoruby::Card.instance_eval do
-            define_method(method_name) {@type & item[:value] > 0}
+            define_method(method_name) {eval('@' + prefix) & item[:value] > 0}
           end
         end
       end
 
       def [](locale)
-        @environments[locale]
+        if @environments.key? locale
+          @environments[locale]
+        else
+          environment = Environment.new locale
+          environment.locale == nil ? nil : environment
+        end
+      end
+
+      def valid_locale_list
+        Dir.entries(Ygoruby.locale_path) - ['.', '..']
       end
     end
 
@@ -234,7 +250,27 @@ module Ygoruby
       card
     end
 
+    def load_all_cards
+      Ygoruby.info "Card environment #{@locale} is loading all cards. Origin cache #{@cards.count} cards is cleared."
+      @cards.clear
+      @dbs.each {|db| load_all_cards_from_database db}
+    end
+
+    def load_all_cards_from_database(database)
+      result = database.execute READ_ALL_DATA_SQL
+      count = 0
+      result.each do |data|
+        card = Ygoruby::Card.new
+        card.read_data data
+        card.locale = @locale
+        @cards[card.id] = card
+        count += 1
+      end
+      Ygoruby.info("Card environment #{@locale} loaded #{count} cards from a database.")
+    end
+
     def [](card_id)
+      return @cards[card_id] if @cards.key? card_id
       generate_card_by_id card_id
     end
 

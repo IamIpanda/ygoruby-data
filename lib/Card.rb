@@ -18,7 +18,7 @@ module Ygoruby
       @desc = data[13]
       if is_type_monster
         @origin_level = data[7]
-        @race = data[6]
+        @race = data[8]
         @attribute = data[9]
         @atk = data[5]
         @def = data[6]
@@ -30,7 +30,8 @@ module Ygoruby
     define_method(:is_tcg) {@ot & 2 > 0}
     define_method(:is_ex) {is_type_synchro or is_type_xyz or is_type_funsion or is_type_link}
     define_method(:level) {@origin_level % 65536}
-    define_method(:pendulum_scale) {isTypePendulum ? (@origin_level - (@origin_level % 65536)) / 65536 / 257 : -1}
+    define_method(:pendulum_scale) {is_type_pendulum ? (@origin_level - (@origin_level % 65536)) / 65536 / 257 : -1}
+    define_method(:link_markers) {sprintf('%09b', @def).scan(/\d/).reverse.map {|s| s == '1'}}
 
     def to_s
       "[#{@locale} Card] [#{@id}] #{@name}"
