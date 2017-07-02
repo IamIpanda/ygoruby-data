@@ -32,6 +32,7 @@ module Ygoruby
     define_method(:level) {@origin_level % 65536}
     define_method(:pendulum_scale) {is_type_pendulum ? (@origin_level - (@origin_level % 65536)) / 65536 / 257 : -1}
     define_method(:link_markers) {sprintf('%09b', @def).scan(/\d/).reverse.map {|s| s == '1'}}
+    define_method(:link_number) { level }
 
     def to_s
       "[#{@locale} Card] [#{@id}] #{@name}"

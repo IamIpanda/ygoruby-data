@@ -125,7 +125,7 @@ module Ygoruby
       end
 
       def valid_locale_list
-        Dir.entries(Ygoruby.locale_path) - ['.', '..']
+        Dir.entries(Ygoruby.locale_path) - ['.', '..', '.DS_Store']
       end
     end
 
