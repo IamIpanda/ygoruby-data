@@ -100,9 +100,9 @@ module Ygoruby
       end
 
       def register_methods
-        register_typed_methods "attribute", @attribute_constants
-        register_typed_methods "race", @race_constants
-        register_typed_methods "type", @type_constants
+        register_typed_methods 'attribute', @attribute_constants
+        register_typed_methods 'race', @race_constants
+        register_typed_methods 'type', @type_constants
       end
 
       def register_typed_methods(prefix, items)

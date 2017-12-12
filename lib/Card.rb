@@ -28,7 +28,7 @@ module Ygoruby
     define_method(:is_alias) {@alias > 0}
     define_method(:is_ocg) {@ot & 1 > 0}
     define_method(:is_tcg) {@ot & 2 > 0}
-    define_method(:is_ex) {is_type_synchro or is_type_xyz or is_type_funsion or is_type_link}
+    define_method(:is_ex) {is_type_synchro or is_type_xyz or is_type_fusion or is_type_link}
     define_method(:level) {@origin_level % 65536}
     define_method(:pendulum_scale) {is_type_pendulum ? (@origin_level - (@origin_level % 65536)) / 65536 / 257 : -1}
     define_method(:link_markers) {sprintf('%09b', @def).scan(/\d/).reverse.map {|s| s == '1'}}

@@ -17,14 +17,14 @@ module Ygoruby
       @side = []
     end
 
-    DECK_FILE_HEAD = "#created by lib."
-    DECK_FILE_MAIN_FLAG = "#main"
-    DECK_FILE_EX_FLAG = "#extra"
-    DECK_FILE_SIDE_FLAG = "!side"
-    DECK_FILE_NEWLINE = "\n"
+    DECK_FILE_HEAD = '#created by lib.'
+    DECK_FILE_MAIN_FLAG = '#main'
+    DECK_FILE_EX_FLAG = '#extra'
+    DECK_FILE_SIDE_FLAG = '!side'
+    DECK_FILE_NEWLINE = '\n'
 
     def save_ydk(file_name)
-      file = File.open(file_name, "w")
+      file = File.open(file_name, 'w')
       file.write DECK_FILE_HEAD + DECK_FILE_NEWLINE
       file.write DECK_FILE_MAIN_FLAG + DECK_FILE_NEWLINE
       self.main.each {|card| file.write card.to_s + DECK_FILE_NEWLINE}
@@ -81,9 +81,9 @@ module Ygoruby
     def self.from_hash(hash)
       return nil if hash == nil
       answer = Deck.allocate
-      answer.main = hash["main"] || []
-      answer.side = hash["side"] || []
-      answer.ex = hash["ex"] || []
+      answer.main = hash['main'] || []
+      answer.side = hash['side'] || []
+      answer.ex = hash['ex'] || []
       answer.classify
       answer
     end
